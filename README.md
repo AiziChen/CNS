@@ -32,15 +32,15 @@
     tcpKeepAlive                tcp生存时间, 默认: 60s
     enableHttpDNS               httpDNS开关, #t则开，#f则关
     enableTFO                   tcpFastOpen开关, #t则开，#f则关
-    enableDaemon                开启后台运行, #t则开，#f则关
     可选参数:
     password                    加密密码, 没有则不加密
     pidPath                     pid文件路径, 没有则不保存
 
 ##### 命令行选项
 
-    -h, --help                  显示帮助
     -config-file                指定新的`config.cfg`的文件路径
+    -daemon                     开启后台运行, 默认开启
+    -h, --help                  显示帮助
 
 ##### 编译
 

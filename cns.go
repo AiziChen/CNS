@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -87,19 +88,62 @@ func pidSaveToFile(pidPath string) {
 func handleCmd() {
 	var listenAddrString, proxyKeyString, CuteBi_XorCrypt_passwordStr, pidPath string
 	var isHelp, enable_daemon bool
+	var configFile string
 
-	flag.StringVar(&proxyKeyString, "proxy-key", "Meng", "tcp request proxy host key")
-	flag.StringVar(&udpFlag, "udp-flag", "httpUDP", "udp request flag string")
-	flag.StringVar(&listenAddrString, "listen-addr", ":80", "listen aaddress")
-	flag.StringVar(&CuteBi_XorCrypt_passwordStr, "encrypt-password", "quanyec", "encrypt password")
-	flag.Int64Var((*int64)(&udp_timeout), "udp-timeout", 30, "udp timeout second")
-	flag.Int64Var((*int64)(&tcp_keepAlive), "tcp-keepalive", 60, "tcp keepalive second")
-	flag.StringVar(&pidPath, "pid-path", "", "pid file path")
-	flag.BoolVar(&enable_dns_tcpOverUdp, "dns-tcpOverUdp", true, "tcpDNS Over udpDNS switch")
-	flag.BoolVar(&enable_httpDNS, "enable-httpDNS", true, "httpDNS server switch")
-	flag.BoolVar(&enable_TFO, "enable-TFO", true, "listener tcpFastOpen switch")
-	flag.BoolVar(&enable_daemon, "daemon", true, "daemon mode switch")
-	flag.BoolVar(&isHelp, "help", false, "display this message")
+	// flag.StringVar(&proxyKeyString, "proxy-key", "Meng", "tcp request proxy host key")
+	// flag.StringVar(&udpFlag, "udp-flag", "httpUDP", "udp request flag string")
+	// flag.StringVar(&listenAddrString, "listen-addr", ":80", "listen aaddress")
+	// flag.StringVar(&CuteBi_XorCrypt_passwordStr, "encrypt-password", "quanyec", "encrypt password")
+	// flag.Int64Var((*int64)(&udp_timeout), "udp-timeout", 30, "udp timeout second")
+	// flag.Int64Var((*int64)(&tcp_keepAlive), "tcp-keepalive", 60, "tcp keepalive second")
+	// flag.StringVar(&pidPath, "pid-path", "", "pid file path")
+	// flag.BoolVar(&enable_dns_tcpOverUdp, "dns-tcpOverUdp", true, "tcpDNS Over udpDNS switch")
+	// flag.BoolVar(&enable_httpDNS, "enable-httpDNS", true, "httpDNS server switch")
+	// flag.BoolVar(&enable_TFO, "enable-TFO", true, "listener tcpFastOpen switch")
+	// flag.BoolVar(&enable_daemon, "daemon", true, "daemon mode switch")
+	flag.StringVar(&configFile, "config-file", "config.cfg", "set configuration file, default `config.cfg`(指定配置文件，不指定时默认为`config.cfg`)")
+	flag.BoolVar(&isHelp, "help", false, "display this message(显示此帮助信息)")
+
+	configMap := InitConfig(configFile)
+	proxyKeyString = configMap["proxyKey"]
+	udpFlag = configMap["udpFlag"]
+	listenAddrString = configMap["listenAddr"]
+	CuteBi_XorCrypt_passwordStr = configMap["password"]
+	udpTimeout, err := strconv.ParseInt(configMap["udpTimeout"], 10, 64)
+	if err != nil {
+		fmt.Printf("udpTimeout参数指定错误：%s，将使用默认值", configMap["udpTimeout"])
+		udp_timeout = 30 * time.Second
+	} else {
+		udp_timeout = time.Duration(udpTimeout * 1000000000)
+	}
+	tcpKeepAlive, err := strconv.ParseInt(configMap["tcpKeepAlive"], 10, 64)
+	if err != nil {
+		fmt.Printf("tcpKeepAlive参数指定错误：%s，将使用默认值", configMap["tcpKeepAlive"])
+		tcp_keepAlive = 60 * time.Second
+	} else {
+		tcp_keepAlive = time.Duration(tcpKeepAlive * 1000000000)
+	}
+	pidPath = configMap["pidPath"]
+	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {
+		enable_dns_tcpOverUdp = true
+	} else {
+		enable_dns_tcpOverUdp = false
+	}
+	if configMap["enableHttpDNS"] == "#t" {
+		enable_httpDNS = true
+	} else {
+		enable_httpDNS = false
+	}
+	if configMap["enableTFO"] == "#t" {
+		enable_TFO = true
+	} else {
+		enable_TFO = false
+	}
+	if configMap["enableDaemon"] == "#t" {
+		enable_daemon = true
+	} else {
+		enable_daemon = false
+	}
 
 	flag.Parse()
 	if isHelp {

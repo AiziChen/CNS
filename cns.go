@@ -9,9 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"os/signal"
 	"runtime"
-	"syscall"
 	"time"
 )
 
@@ -105,8 +103,7 @@ func handleCmd() {
 
 	flag.Parse()
 	if isHelp {
-		fmt.Println("　/) /)\nฅ(՞•ﻌ•՞)ฅ\nCuteBi Network Server 0.2.1\n" +
-			"Author: CuteBi(Mmmdbybyd)\nE-mail: 915445800@qq.com\n")
+		fmt.Println("CuteBi Network Server v0.2.1")
 		flag.Usage()
 		os.Exit(0)
 	}
@@ -140,7 +137,7 @@ func initProcess() {
 	handleCmd()
 	setsid()
 	setMaxNofile()
-	signal.Ignore(syscall.SIGPIPE)
+	// signal.Ignore(syscall.SIGPIPE)
 }
 
 func handling() {
@@ -155,7 +152,7 @@ func handling() {
 			time.Sleep(3 * time.Second)
 		}
 	}
-	listener.Close()
+	//listener.Close()
 }
 
 func main() {

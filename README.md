@@ -16,26 +16,31 @@
     1. 使用自己的加密协议加密流量
     2. 可伪装为各种HTTP流量
     3. 支持UDP_Over_HttpTunnel
+    4. 使用配置文件替换了命令行参数
+
+## BUG 修复
+
+    1. 修复了在长时连接状态下会自动关闭连接的 BUG
 
 ##### 配置文件(config.cfg)
 
     必选参数:
-    proxyKey                    代理头域, 默认: 'Meng'
-    udpFlag                     udp请求标识, 默认: 'httpUDP'
-    listenAddr                  监听地址, 默认: ':80'
-    udpTimeout                  udp连接超时, 默认: 30s
+    proxyKey                    代理头域, 如: 'Meng'
+    udpFlag                     udp请求标识, 如: 'httpUDP'
+    listenAddr                  监听端口, 如: ':80'
+    udpTimeout                  udp超时时间, 默认: 30s
     tcpKeepAlive                tcp生存时间, 默认: 60s
+    enableHttpDNS               httpDNS开关, #t则开，#f则关
+    enableTFO                   tcpFastOpen开关, #t则开，#f则关
+    enableDaemon                开启后台运行, #t则开，#f则关
     可选参数:
     password                    加密密码, 没有则不加密
     pidPath                     pid文件路径, 没有则不保存
-    enableHttpDNS               httpDNS开关, 默认关闭
-    enableTFO                   tcpFastOpen开关, 默认关闭
-    enableDaemon                开启后台运行, 默认关闭
 
 ##### 命令行选项
 
     -h, --help                  显示帮助
-    -config-file                指定`config-file.cfg`的文件路径
+    -config-file                指定新的`config.cfg`的文件路径
 
 ##### 编译
 

@@ -101,11 +101,10 @@ func handleCmd() {
 	// flag.BoolVar(&enable_httpDNS, "enable-httpDNS", true, "httpDNS server switch")
 	// flag.BoolVar(&enable_TFO, "enable-TFO", true, "listener tcpFastOpen switch")
 	// flag.BoolVar(&enable_daemon, "daemon", true, "daemon mode switch")
-	// flag.StringVar(&configFile, "config-file", "config.cfg", "set configuration file, default `config.cfg`(指定配置文件，不指定时默认为`config.cfg`)")
-	// flag.BoolVar(&isHelp, "help", false, "display this message(显示此帮助信息)")
+	flag.StringVar(&configFile, "config-file", "config.cfg", "set configuration file, default `config.cfg`(指定配置文件，不指定时默认为`config.cfg`)")
+	flag.BoolVar(&isHelp, "help", false, "display this message(显示此帮助信息)")
 
 	configMap := InitConfig(configFile)
-	fmt.Println(configMap)
 	proxyKeyString = configMap["proxyKey"]
 	udpFlag = configMap["udpFlag"]
 	listenAddrString = configMap["listenAddr"]

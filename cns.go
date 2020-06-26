@@ -114,14 +114,14 @@ func handleCmd() {
 		fmt.Printf("udpTimeout参数指定错误：%s，将使用默认值", configMap["udpTimeout"])
 		udp_timeout = 30 * time.Second
 	} else {
-		udp_timeout = time.Duration(udpTimeout * 1000000000)
+		udp_timeout = time.Duration(udpTimeout) * time.Second
 	}
 	tcpKeepAlive, err := strconv.ParseInt(configMap["tcpKeepAlive"], 10, 64)
 	if err != nil {
 		fmt.Printf("tcpKeepAlive参数指定错误：%s，将使用默认值", configMap["tcpKeepAlive"])
 		tcp_keepAlive = 60 * time.Second
 	} else {
-		tcp_keepAlive = time.Duration(tcpKeepAlive * 1000000000)
+		tcp_keepAlive = time.Duration(tcpKeepAlive) * time.Second
 	}
 	pidPath = configMap["pidPath"]
 	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {

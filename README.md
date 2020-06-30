@@ -28,7 +28,7 @@
     必选参数:
     proxyKey                    代理头域, 如: 'Meng'
     udpFlag                     udp请求标识, 如: 'httpUDP'
-    listenAddr                  监听端口, 如: ':80'
+    listenAddr                  监听端口, 如: ':80'，多个端口如：':80,:443,:520'
     udpTimeout                  udp超时时间, 默认: 30s
     tcpKeepAlive                tcp生存时间, 默认: 60s
     enableHttpDNS               httpDNS开关, #t则开，#f则关

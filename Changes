@@ -7,3 +7,9 @@
     解决tcpDNS Over udpDNS可能会出现的一些问题
     解决CPU占用过大的问题
     请求头中的host如果没有端口默认使用80端口
+
+0.2.2
+    CNS自动设置Max open files的值为1048576
+
+0.2.3
+    支持服务多个端口（通过config.cfg文件中的`listenAddr`指定）

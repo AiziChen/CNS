@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	//"fmt"
 	"log"
 	"net"
 	"strings"
@@ -17,15 +16,12 @@ func tcpForward(fromConn, toConn *net.TCPConn, payload []byte) {
 	var RLen, CuteBi_XorCrypt_passwordSub int
 	var err error
 	for {
-		//fromConn.SetReadDeadline(time.Now().Add(tcp_timeout))
-		//toConn.SetReadDeadline(time.Now().Add(tcp_timeout))
 		if RLen, err = fromConn.Read(payload); err != nil {
 			return
 		}
 		if len(CuteBi_XorCrypt_password) != 0 {
 			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[:RLen], CuteBi_XorCrypt_passwordSub)
 		}
-		//toConn.SetWriteDeadline(time.Now().Add(tcp_timeout))
 		if _, err = toConn.Write(payload[:RLen]); err != nil {
 			return
 		}

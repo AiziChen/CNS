@@ -4,24 +4,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"syscall"
 )
 
 func setMaxNofile() {
-	// 	return
-	// 	var rlim syscall.Rlimit
-	// 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rlim)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	rlim.Cur = 65535
-	// 	rlim.Max = 65535
-	// 	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rlim)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
+	var rlim syscall.Rlimit
+	rlim.Cur = 1048576
+	rlim.Max = 1048576
+	err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rlim)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func setsid() {

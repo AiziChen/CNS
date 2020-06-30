@@ -10,6 +10,7 @@
 
     1. 普通的CONNECT代理服务器(暂时不考虑添加普通http支持)
     2. 实现与114DNS以及腾讯的dnsPod一样的httpDNS服务端
+    3. 支持服务多个端口（通过config.cfg文件中的`listenAddr`指定）
 
 ## 服务端+客户端
 

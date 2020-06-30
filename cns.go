@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	listener                                          *net.TCPListener
 	udpFlag                                           string
 	proxyKey                                          []byte
 	udp_timeout, tcp_keepAlive                        time.Duration
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
+	listenAddrs                                       []string
 )
 
 func isHttpHeader(header []byte) bool {
@@ -85,29 +85,20 @@ func pidSaveToFile(pidPath string) {
 	fp.Close()
 }
 
-func handleCmd() {
-	var listenAddrString, proxyKeyString, CuteBi_XorCrypt_passwordStr, pidPath string
+func initConfig() {
+	var proxyKeyString, CuteBi_XorCrypt_passwordStr, pidPath string
 	var isHelp, enable_daemon bool
 	var configFile string
 
-	// flag.StringVar(&proxyKeyString, "proxy-key", "Meng", "tcp request proxy host key")
-	// flag.StringVar(&udpFlag, "udp-flag", "httpUDP", "udp request flag string")
-	// flag.StringVar(&listenAddrString, "listen-addr", ":80", "listen aaddress")
-	// flag.StringVar(&CuteBi_XorCrypt_passwordStr, "encrypt-password", "quanyec", "encrypt password")
-	// flag.Int64Var((*int64)(&udp_timeout), "udp-timeout", 30, "udp timeout second")
-	// flag.Int64Var((*int64)(&tcp_keepAlive), "tcp-keepalive", 60, "tcp keepalive second")
-	// flag.StringVar(&pidPath, "pid-path", "", "pid file path")
-	// flag.BoolVar(&enable_dns_tcpOverUdp, "dns-tcpOverUdp", true, "tcpDNS Over udpDNS switch")
-	// flag.BoolVar(&enable_httpDNS, "enable-httpDNS", true, "httpDNS server switch")
-	// flag.BoolVar(&enable_TFO, "enable-TFO", true, "listener tcpFastOpen switch")
 	flag.BoolVar(&enable_daemon, "daemon", true, "daemon mode switch(开启后台运行)")
 	flag.StringVar(&configFile, "config-file", "config.cfg", "set configuration file, default `config.cfg`(指定配置文件，不指定时默认为`config.cfg`)")
 	flag.BoolVar(&isHelp, "help", false, "display this message(显示此帮助信息)")
+	flag.Parse()
 
 	configMap := InitConfig(configFile)
 	proxyKeyString = configMap["proxyKey"]
 	udpFlag = configMap["udpFlag"]
-	listenAddrString = configMap["listenAddr"]
+	listenAddrs = toAddrs(configMap["listenAddr"])
 	CuteBi_XorCrypt_passwordStr = configMap["password"]
 	udpTimeout, err := strconv.ParseInt(configMap["udpTimeout"], 10, 64)
 	if err != nil {
@@ -140,7 +131,6 @@ func handleCmd() {
 		enable_TFO = false
 	}
 
-	flag.Parse()
 	if isHelp {
 		fmt.Println("CuteBi Network Server v0.2.1")
 		flag.Usage()
@@ -150,36 +140,19 @@ func handleCmd() {
 		exec.Command(os.Args[0], []string(append(os.Args[1:], "-daemon=false"))...).Start()
 		os.Exit(0)
 	}
-	listenAddr, err := net.ResolveTCPAddr("tcp", listenAddrString)
-	listener, err = net.ListenTCP("tcp", listenAddr)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-	if enable_TFO {
-		enableTcpFastOpen(listener)
-	}
-	if pidPath != "" {
-		pidSaveToFile(pidPath)
-	}
 	proxyKey = []byte("\n" + proxyKeyString + ": ")
 	CuteBi_XorCrypt_password = []byte(CuteBi_XorCrypt_passwordStr)
 	udp_timeout *= time.Second
 	tcp_keepAlive *= time.Second
-}
 
-func settings() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
-
-func initProcess() {
-	handleCmd()
+	if pidPath != "" {
+		pidSaveToFile(pidPath)
+	}
 	setsid()
 	setMaxNofile()
-	// signal.Ignore(syscall.SIGPIPE)
 }
 
-func handling() {
+func handling(listener *net.TCPListener) {
 	for {
 		conn, err := listener.AcceptTCP()
 		if err == nil {
@@ -194,8 +167,25 @@ func handling() {
 	//listener.Close()
 }
 
+func initListener(listenAddr string) *net.TCPListener {
+	addr, _ := net.ResolveTCPAddr("tcp", listenAddr)
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	if enable_TFO {
+		enableTcpFastOpen(listener)
+	}
+	return listener
+}
+
 func main() {
-	settings()
-	initProcess()
-	handling()
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	initConfig()
+	for i := 0; i < len(listenAddrs); i++ {
+		listener := initListener(listenAddrs[i])
+		go handling(listener)
+	}
 }

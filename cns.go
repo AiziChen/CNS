@@ -185,7 +185,7 @@ func main() {
 
 	initConfig()
 	addrsLen := len(listenAddrs)
-	for i := 0; i < addrsLen; i++ {
+	for i := 0; i < addrsLen-1; i++ {
 		listener := initListener(listenAddrs[i])
 		go handling(listener)
 	}

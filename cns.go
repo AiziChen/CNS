@@ -164,7 +164,7 @@ func handling(listener *net.TCPListener) {
 			time.Sleep(3 * time.Second)
 		}
 	}
-	//listener.Close()
+	// listener.Close()
 }
 
 func initListener(listenAddr string) *net.TCPListener {
@@ -184,8 +184,11 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	initConfig()
-	for i := 0; i < len(listenAddrs); i++ {
+	addrsLen := len(listenAddrs)
+	for i := 0; i < addrsLen; i++ {
 		listener := initListener(listenAddrs[i])
 		go handling(listener)
 	}
+	listener := initListener(listenAddrs[addrsLen-1])
+	handling(listener)
 }

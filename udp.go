@@ -16,22 +16,14 @@ type UdpSession struct {
 }
 
 func (udpSess *UdpSession) udpServerToClient() {
-	defer udpSess.cConn.Close()
-	defer udpSess.udpSConn.Close()
-
-	/* 不要在for里用:=申请变量, 否则每次循环都会重新申请内存 */
-	var (
-		RAddr                              *net.UDPAddr
-		payload_len, ignore_head_len, WLen int
-		err                                error
-	)
+	var ignore_head_len int = 0
 	payload := make([]byte, 65536)
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		payload_len, RAddr, err = udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
+		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
 		if err != nil || payload_len <= 0 {
-			return
+			break
 		}
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
 		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) == true {
@@ -51,14 +43,16 @@ func (udpSess *UdpSession) udpServerToClient() {
 		}
 		payload[22] = byte(RAddr.Port >> 8)
 		payload[23] = byte(RAddr.Port)
-		if len(CuteBi_XorCrypt_password) != 0 {
+		if CuteBi_XorCrypt_password != nil {
 			udpSess.s2c_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[ignore_head_len:24+payload_len], udpSess.s2c_CuteBi_XorCrypt_passwordSub)
 		}
 		udpSess.cConn.SetWriteDeadline(time.Now().Add(udp_timeout))
-		if WLen, err = udpSess.cConn.Write(payload[ignore_head_len : 24+payload_len]); err != nil || WLen <= 0 {
-			return
+		if WLen, err := udpSess.cConn.Write(payload[ignore_head_len : 24+payload_len]); err != nil || WLen <= 0 {
+			break
 		}
 	}
+	udpSess.udpSConn.Close()
+	udpSess.cConn.Close()
 }
 
 func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
@@ -97,18 +91,16 @@ func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
 			return -1
 		}
 	}
-
 	return int(pkgSub)
 }
 
 func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
-	defer udpSess.cConn.Close()
-	defer udpSess.udpSConn.Close()
-
 	var payload_len, RLen, WLen int
 	var err error
 	WLen = udpSess.writeToServer(httpUDP_data)
 	if WLen == -1 {
+		udpSess.udpSConn.Close()
+		udpSess.cConn.Close()
 		return
 	}
 	payload := make([]byte, 65536)
@@ -120,26 +112,28 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		RLen, err = udpSess.cConn.Read(payload[payload_len:])
 		if err != nil || RLen <= 0 {
-			return
+			break
 		}
-		if len(CuteBi_XorCrypt_password) != 0 {
+		if CuteBi_XorCrypt_password != nil {
 			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payload_len:payload_len+RLen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 		}
 		payload_len += RLen
 		//log.Println("Read Client: ", payload_len)
 		WLen = udpSess.writeToServer(payload[:payload_len])
 		if WLen == -1 {
-			return
+			break
 		} else if WLen < payload_len {
 			payload_len = copy(payload, payload[WLen:payload_len])
 		} else {
 			payload_len = 0
 		}
 	}
+	udpSess.udpSConn.Close()
+	udpSess.cConn.Close()
 }
 
 func (udpSess *UdpSession) initUdp(httpUDP_data []byte) bool {
-	if len(CuteBi_XorCrypt_password) != 0 {
+	if CuteBi_XorCrypt_password != nil {
 		de := make([]byte, 5)
 		copy(de, httpUDP_data[0:5])
 		CuteBi_XorCrypt(de, 0)
@@ -159,8 +153,6 @@ func (udpSess *UdpSession) initUdp(httpUDP_data []byte) bool {
 }
 
 func handleUdpSession(cConn *net.TCPConn, httpUDP_data []byte) {
-	defer log.Println("A udp client close")
-
 	udpSess := new(UdpSession)
 	udpSess.cConn = cConn
 	if udpSess.initUdp(httpUDP_data) == false {
@@ -171,4 +163,5 @@ func handleUdpSession(cConn *net.TCPConn, httpUDP_data []byte) {
 	log.Println("Start udpForward")
 	go udpSess.udpClientToServer(httpUDP_data)
 	udpSess.udpServerToClient()
+	log.Println("A udp client close")
 }

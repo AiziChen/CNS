@@ -141,7 +141,11 @@ func initConfig() {
 		os.Exit(0)
 	}
 	proxyKey = []byte("\n" + proxyKeyString + ": ")
-	CuteBi_XorCrypt_password = []byte(CuteBi_XorCrypt_passwordStr)
+	if CuteBi_XorCrypt_passwordStr == "" {
+		CuteBi_XorCrypt_password = nil
+	} else {
+		CuteBi_XorCrypt_password = []byte(CuteBi_XorCrypt_passwordStr)
+	}
 	udp_timeout *= time.Second
 	tcp_keepAlive *= time.Second
 

@@ -24,7 +24,7 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 			return
 		}
 		//解密
-		if len(CuteBi_XorCrypt_password) != 0 {
+		if CuteBi_XorCrypt_password != nil {
 			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(buffer[payloadLen:payloadLen+RLen], CuteBi_XorCrypt_passwordSub)
 		}
 		payloadLen += RLen
@@ -59,7 +59,7 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 	buffer[0] = byte(RLen >> 8)
 	buffer[1] = byte(RLen)
 	//加密
-	if len(CuteBi_XorCrypt_password) != 0 {
+	if CuteBi_XorCrypt_password != nil {
 		CuteBi_XorCrypt(buffer[:2+RLen], 0)
 	}
 	cConn.Write(buffer[:2+RLen])

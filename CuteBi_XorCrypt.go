@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-var CuteBi_XorCrypt_password []byte
+var CuteBi_XorCrypt_password []byte = nil
 
 /* 一个简单的异或加密 */
 func CuteBi_XorCrypt(data []byte, passwordSub int) int {

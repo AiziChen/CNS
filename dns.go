@@ -14,12 +14,11 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 	log.Println("Start dns_tcpOverUdp")
 	defer cConn.Close()
 
-	var err error
-	var WLen, RLen, payloadLen, CuteBi_XorCrypt_passwordSub int
+	var payloadLen, CuteBi_XorCrypt_passwordSub int
 	var pkgLen uint16
 	for {
 		//cConn.SetReadDeadline(time.Now().Add(tcp_timeout))
-		RLen, err = cConn.Read(buffer[payloadLen:])
+		RLen, err := cConn.Read(buffer[payloadLen:])
 		if RLen <= 0 || err != nil {
 			return
 		}
@@ -48,11 +47,13 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 		return
 	}
 	defer sConn.Close()
-	if WLen, err = sConn.Write(buffer[2:payloadLen]); WLen <= 0 || err != nil {
+	if WLen, err := sConn.Write(buffer[2:payloadLen]); WLen <= 0 || err != nil {
 		return
 	}
 	sConn.SetReadDeadline(time.Now().Add(udp_timeout))
-	if RLen, err = sConn.Read(buffer[2:]); RLen <= 0 || err != nil {
+
+	RLen, err := sConn.Read(buffer[2:])
+	if RLen <= 0 || err != nil {
 		return
 	}
 	//包长度转换

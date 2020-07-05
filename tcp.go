@@ -27,7 +27,7 @@ func tcpForward(fromConn, toConn *net.TCPConn, payload []byte) {
 }
 
 func getProxyHost(header []byte) string {
-	hostSub := bytes.Index(header, proxyKey)
+	var hostSub int = bytes.Index(header, proxyKey)
 	if hostSub < 0 {
 		return ""
 	}

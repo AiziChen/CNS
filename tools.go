@@ -18,7 +18,7 @@ func readLine(conn *net.TCPConn) []byte {
 	if err != nil || l <= 0 {
 		return nil
 	}
-	if l <= EACH_SIZE {
+	if l < EACH_SIZE {
 		return buff[:l]
 	} else {
 		return append(buff, readLine(conn)...)
@@ -31,7 +31,7 @@ func readLine2(conn *net.TCPConn) []byte {
 	if err != nil || l <= 0 {
 		return nil
 	}
-	if l <= EACH_SIZE {
+	if l < EACH_SIZE {
 		return buff[:l]
 	} else {
 		return append(buff, readLine(conn)...)
@@ -44,7 +44,7 @@ func readLineFromUdp(conn *net.UDPConn) ([]byte, *net.UDPAddr) {
 	if err != nil || l <= 0 {
 		return nil, nil
 	}
-	if l <= EACH_SIZE {
+	if l < EACH_SIZE {
 		return buff[:l], addr
 	} else {
 		b, addr := readLineFromUdp(conn)

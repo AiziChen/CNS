@@ -18,7 +18,7 @@ func readLine(conn *net.TCPConn) []byte {
 	if err != nil || l <= 0 {
 		return nil
 	}
-	if l < EACH_SIZE {
+	if l <= EACH_SIZE {
 		return buff[:l]
 	} else {
 		return append(buff, readLine(conn)...)

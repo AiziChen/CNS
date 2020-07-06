@@ -110,11 +110,12 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		return
 	}
 	// payload := make([]byte, 65536)
-	// payloadLen := 0
-	// if wlen < len(httpUDP_data) {
-	// payloadLen = copy(payload, httpUDP_data[wlen:])
-	// 	payloadLen = len(httpUDP_data) - wlen
-	// }
+	payloadLen := 0
+	dataLen := len(httpUDP_data)
+	if wlen < dataLen {
+		// payloadLen = copy(payload, httpUDP_data[wlen:])
+		payloadLen = dataLen - wlen
+	}
 	for {
 		// udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		// udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
@@ -126,7 +127,7 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		if rData == nil {
 			break
 		}
-		// rlen := len(rData)
+		rlen := len(rData)
 		if CuteBi_XorCrypt_password != nil {
 			// udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(rData, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
@@ -134,16 +135,17 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		// payloadLen += rlen
 		//log.Println("Read Client: ", payloadLen)
 		// wlen = udpSess.writeToServer(payload[:payloadLen])
-		payload := append(httpUDP_data[wlen:], rData...)
+		payload := append(httpUDP_data[payloadLen:], rData...)
 		wlen = udpSess.writeToServer(payload)
 		if wlen < 0 {
 			break
-			// } else if wlen < payloadLen {
-			// 	payloadLen = copy(payload, payload[wlen:payloadLen])
+		} else if wlen < payloadLen+rlen {
+			// payloadLen = copy(payload, payload[wlen:payloadLen])
+			payloadLen = payloadLen + rlen - wlen
+			httpUDP_data = rData[wlen : payloadLen+rlen]
+		} else {
+			payloadLen = 0
 		}
-		//  else {
-		// 	payloadLen = 0
-		// }
 	}
 	udpSess.udpSConn.Close()
 	udpSess.cConn.Close()

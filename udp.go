@@ -109,40 +109,40 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		udpSess.cConn.Close()
 		return
 	}
-	// payload := make([]byte, 65536)
+	payload := make([]byte, 65536)
 	payloadLen := 0
 	dataLen := len(httpUDP_data)
 	if wlen < dataLen {
-		// payloadLen = copy(payload, httpUDP_data[wlen:])
-		payloadLen = dataLen - wlen
+		payloadLen = copy(payload, httpUDP_data[wlen:])
+		// payloadLen = dataLen - wlen
 	}
 	for {
 		// udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		// udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		// rlen, err := udpSess.cConn.Read(payload[payloadLen:])
-		rData := readLine(udpSess.cConn)
-		// if err != nil || rlen <= 0 {
-		// 	break
-		// }
-		if rData == nil {
+		rlen, err := udpSess.cConn.Read(payload[payloadLen:])
+		// rData := readLine(udpSess.cConn)
+		if err != nil || rlen <= 0 {
 			break
 		}
-		rlen := len(rData)
+		// if rData == nil {
+		// 	break
+		// }
+		// rlen := len(rData)
 		if CuteBi_XorCrypt_password != nil {
-			// udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
-			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(rData, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			// udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(rData, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 		}
-		// payloadLen += rlen
+		payloadLen += rlen
 		//log.Println("Read Client: ", payloadLen)
-		// wlen = udpSess.writeToServer(payload[:payloadLen])
-		payload := append(httpUDP_data[payloadLen:], rData...)
+		wlen = udpSess.writeToServer(payload[:payloadLen])
+		// payload := append(httpUDP_data[payloadLen:], rData...)
 		wlen = udpSess.writeToServer(payload)
 		if wlen < 0 {
 			break
 		} else if wlen < payloadLen+rlen {
-			// payloadLen = copy(payload, payload[wlen:payloadLen])
-			payloadLen = payloadLen + rlen - wlen
-			httpUDP_data = rData[wlen : payloadLen+rlen]
+			payloadLen = copy(payload, payload[wlen:payloadLen])
+			// payloadLen = payloadLen + rlen - wlen
+			// httpUDP_data = rData[wlen : payloadLen+rlen]
 		} else {
 			payloadLen = 0
 		}

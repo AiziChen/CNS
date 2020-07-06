@@ -17,21 +17,21 @@ type UdpSession struct {
 
 func (udpSess *UdpSession) udpServerToClient() {
 	var ignore_head_len int = 0
-	// payload := make([]byte, 65536)
+	payload := make([]byte, 65536)
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		// payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
-		payload, RAddr := readLineFromUdp(udpSess.udpSConn)
 		/*24为httpUDP协议头保留使用*/
-		payload = append(make([]byte, 24), payload...)
-		// if err != nil || payload_len <= 0 {
-		// 	break
-		// }
-		payload_len := len(payload)
-		if payload == nil || RAddr == nil {
+		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
+		// payload, RAddr := readLineFromUdp(udpSess.udpSConn)
+		// payload = append(make([]byte, 24), payload...)
+		if err != nil || payload_len <= 0 {
 			break
 		}
+		// payload_len := len(payload)
+		// if payload == nil || RAddr == nil {
+		// 	break
+		// }
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
 		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) == true {
 			/* ipv4 */

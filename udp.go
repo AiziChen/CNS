@@ -17,13 +17,19 @@ type UdpSession struct {
 
 func (udpSess *UdpSession) udpServerToClient() {
 	var ignore_head_len int = 0
-	payload := make([]byte, 65536)
+	// payload := make([]byte, 65536)
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
+		// payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
+		payload, RAddr := readLineFromUdp(udpSess.udpSConn)
 		/*24为httpUDP协议头保留使用*/
-		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
-		if err != nil || payload_len <= 0 {
+		payload = append(make([]byte, 24), payload...)
+		// if err != nil || payload_len <= 0 {
+		// 	break
+		// }
+		payload_len := len(payload)
+		if payload == nil || RAddr == nil {
 			break
 		}
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
@@ -102,31 +108,41 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		udpSess.cConn.Close()
 		return
 	}
-	payload := make([]byte, 65536)
-	payloadLen := 0
-	if wlen < len(httpUDP_data) {
-		payloadLen = copy(payload, httpUDP_data[wlen:])
-	}
+	// payload := make([]byte, 65536)
+	// payloadLen := 0
+	// if wlen < len(httpUDP_data) {
+	// payloadLen = copy(payload, httpUDP_data[wlen:])
+	// 	payloadLen = len(httpUDP_data) - wlen
+	// }
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		rlen, err := udpSess.cConn.Read(payload[payloadLen:])
-		if err != nil || rlen <= 0 {
+		// rlen, err := udpSess.cConn.Read(payload[payloadLen:])
+		data := readLine(udpSess.cConn)
+		// if err != nil || rlen <= 0 {
+		// 	break
+		// }
+		if data == nil {
 			break
 		}
+		// rlen := len(data)
 		if CuteBi_XorCrypt_password != nil {
-			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			// udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 		}
-		payloadLen += rlen
+		// payloadLen += rlen
 		//log.Println("Read Client: ", payloadLen)
-		wlen = udpSess.writeToServer(payload[:payloadLen])
-		if wlen == -1 {
+		// wlen = udpSess.writeToServer(payload[:payloadLen])
+		payload := append(httpUDP_data, data...)
+		wlen = udpSess.writeToServer(payload)
+		if wlen < 0 {
 			break
-		} else if wlen < payloadLen {
-			payloadLen = copy(payload, payload[wlen:payloadLen])
-		} else {
-			payloadLen = 0
+			// } else if wlen < payloadLen {
+			// 	payloadLen = copy(payload, payload[wlen:payloadLen])
 		}
+		//  else {
+		// 	payloadLen = 0
+		// }
 	}
 	udpSess.udpSConn.Close()
 	udpSess.cConn.Close()

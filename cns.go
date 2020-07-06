@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -51,8 +50,8 @@ func rspHeader(header []byte) []byte {
 }
 
 func handleConn(cConn *net.TCPConn) {
-	data, err := ioutil.ReadAll(cConn)
-	if err != nil || len(data) <= 0 {
+	data := readLine(cConn)
+	if data == nil {
 		cConn.Close()
 		return
 	}

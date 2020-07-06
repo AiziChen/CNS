@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
 	"log"
 	"net"
 	"strings"
@@ -12,14 +11,14 @@ import (
 func tcpForward(fromConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
 	for {
-		data, err := ioutil.ReadAll(fromConn)
-		if err != nil {
+		data := readLine(fromConn)
+		if data == nil {
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {
 			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data, CuteBi_XorCrypt_passwordSub)
 		}
-		if _, err = toConn.Write(data); err != nil {
+		if _, err := toConn.Write(data); err != nil {
 			break
 		}
 	}

@@ -21,7 +21,8 @@ func (udpSess *UdpSession) udpServerToClient() {
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
+		/*24为httpUDP协议头保留使用*/
+		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
 		if err != nil || payload_len <= 0 {
 			break
 		}

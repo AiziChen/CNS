@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -49,24 +50,24 @@ func rspHeader(header []byte) []byte {
 	}
 }
 
-func handleConn(cConn *net.TCPConn, payload []byte) {
-	RLen, err := cConn.Read(payload)
-	if err != nil || RLen <= 0 {
+func handleConn(cConn *net.TCPConn) {
+	data, err := ioutil.ReadAll(cConn)
+	if err != nil || len(data) <= 0 {
 		cConn.Close()
 		return
 	}
-	if !isHttpHeader(payload[:RLen]) {
-		handleUdpSession(cConn, payload[:RLen])
+	if !isHttpHeader(data) {
+		handleUdpSession(cConn, data)
 	} else {
-		if !enable_httpDNS || !RespondHttpdns(cConn, payload[:RLen]) { /*优先处理httpDNS请求*/
-			if WLen, err := cConn.Write(rspHeader(payload[:RLen])); err != nil || WLen <= 0 {
+		if !enable_httpDNS || !RespondHttpdns(cConn, data) { /*优先处理httpDNS请求*/
+			if WLen, err := cConn.Write(rspHeader(data)); err != nil || WLen <= 0 {
 				cConn.Close()
 				return
 			}
-			if bytes.Contains(payload[:RLen], []byte(udpFlag)) {
-				handleConn(cConn, payload) //httpUDP需要读取到二进制数据才进行处理
+			if bytes.Contains(data, []byte(udpFlag)) {
+				handleConn(cConn) //httpUDP需要读取到二进制数据才进行处理
 			} else {
-				handleTcpSession(cConn, payload)
+				handleTcpSession(cConn, data)
 			}
 		}
 	}
@@ -162,7 +163,7 @@ func handling(listener *net.TCPListener) {
 		if err == nil {
 			conn.SetKeepAlive(true)
 			conn.SetKeepAlivePeriod(tcp_keepAlive)
-			go handleConn(conn, make([]byte, 8192))
+			go handleConn(conn)
 		} else {
 			log.Println(err)
 			time.Sleep(3 * time.Second)

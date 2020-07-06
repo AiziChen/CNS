@@ -3,22 +3,23 @@ package main
 
 import (
 	"bytes"
+	"io/ioutil"
 	"log"
 	"net"
 	"strings"
 )
 
-func tcpForward(fromConn, toConn *net.TCPConn, payload []byte) {
+func tcpForward(fromConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
 	for {
-		index, err := fromConn.Read(payload)
+		data, err := ioutil.ReadAll(fromConn)
 		if err != nil {
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {
-			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[:index], CuteBi_XorCrypt_passwordSub)
+			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data, CuteBi_XorCrypt_passwordSub)
 		}
-		if _, err = toConn.Write(payload[:index]); err != nil {
+		if _, err = toConn.Write(data); err != nil {
 			break
 		}
 	}
@@ -86,8 +87,8 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 	sConn.SetKeepAlivePeriod(tcp_keepAlive)
 	/* start forward */
 	log.Println("Start tcpForward")
-	go tcpForward(cConn, sConn, make([]byte, 8192))
-	tcpForward(sConn, cConn, header)
+	go tcpForward(cConn, sConn)
+	tcpForward(sConn, cConn)
 
 	log.Println("A tcp client close")
 }

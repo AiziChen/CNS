@@ -21,17 +21,10 @@ func (udpSess *UdpSession) udpServerToClient() {
 	for {
 		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		/*24为httpUDP协议头保留使用*/
-		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:])
-		// payload, RAddr := readLineFromUdp(udpSess.udpSConn)
-		// payload = append(make([]byte, 24), payload...)
+		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
 		if err != nil || payload_len <= 0 {
 			break
 		}
-		// payload_len := len(payload)
-		// if payload == nil || RAddr == nil {
-		// 	break
-		// }
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
 		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) == true {
 			/* ipv4 */
@@ -64,17 +57,16 @@ func (udpSess *UdpSession) udpServerToClient() {
 
 func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
 	var (
-		udpAddr                   net.UDPAddr
-		pkgSub                    int
-		httpUDP_protocol_head_len int
-		pkgLen                    uint16
+		udpAddr                           net.UDPAddr
+		err                               error
+		WLen                              int
+		pkgSub, httpUDP_protocol_head_len int
+		pkgLen                            uint16
 	)
-	var dataLen = len(httpUDP_data)
-	for pkgSub = 0; pkgSub+2 < dataLen; pkgSub += 2 + int(pkgLen) {
-		// 2字节储存包的长度，包括socks5头
-		pkgLen = uint16(httpUDP_data[pkgSub]) | (uint16(httpUDP_data[pkgSub+1]) << 8)
-		// log.Println("pkgSub: ", pkgSub, ", pkgLen: ", pkgLen, "  ", uint16(dataLen))
-		if pkgSub+2+int(pkgLen) > dataLen || pkgLen <= 10 {
+	for pkgSub = 0; pkgSub+2 < len(httpUDP_data); pkgSub += 2 + int(pkgLen) {
+		pkgLen = uint16(httpUDP_data[pkgSub]) | (uint16(httpUDP_data[pkgSub+1]) << 8) //2字节储存包的长度，包括socks5头
+		//log.Println("pkgSub: ", pkgSub, ", pkgLen: ", pkgLen, "  ", uint16(len(httpUDP_data)))
+		if pkgSub+2+int(pkgLen) > len(httpUDP_data) || pkgLen <= 10 {
 			return 0
 		}
 		if bytes.HasPrefix(httpUDP_data[pkgSub+3:pkgSub+5], []byte{0, 0}) == false {
@@ -95,44 +87,45 @@ func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
 			httpUDP_protocol_head_len = 24
 		}
 		//log.Println("WriteToUdpAddr: ", udpAddr.String())
-		if len, err := udpSess.udpSConn.WriteToUDP(httpUDP_data[pkgSub+httpUDP_protocol_head_len:pkgSub+2+int(pkgLen)], &udpAddr); err != nil || len <= 0 {
+		if WLen, err = udpSess.udpSConn.WriteToUDP(httpUDP_data[pkgSub+httpUDP_protocol_head_len:pkgSub+2+int(pkgLen)], &udpAddr); err != nil || WLen <= 0 {
 			return -1
 		}
 	}
-	return pkgSub
+	return int(pkgSub)
 }
 
 func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
-	var wlen = udpSess.writeToServer(httpUDP_data)
-	if wlen < 0 {
+	var payload_len, RLen, WLen int
+	var err error
+	WLen = udpSess.writeToServer(httpUDP_data)
+	if WLen == -1 {
 		udpSess.udpSConn.Close()
 		udpSess.cConn.Close()
 		return
 	}
-	payloadLen := 0
-	dataLen := len(httpUDP_data)
-	if wlen < dataLen {
-		payloadLen = dataLen - wlen
+	payload := make([]byte, 65536)
+	if WLen < len(httpUDP_data) {
+		payload_len = copy(payload, httpUDP_data[WLen:])
 	}
 	for {
-		rData := readLine(udpSess.cConn)
-		if rData == nil {
+		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
+		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
+		RLen, err = udpSess.cConn.Read(payload[payload_len:])
+		if err != nil || RLen <= 0 {
 			break
 		}
-		rlen := len(rData)
 		if CuteBi_XorCrypt_password != nil {
-			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(rData, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payload_len:payload_len+RLen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 		}
-		payload := append(httpUDP_data[payloadLen:], rData...)
-		payloadLen += rlen
-		wlen = udpSess.writeToServer(payload)
-		if wlen < 0 {
+		payload_len += RLen
+		//log.Println("Read Client: ", payload_len)
+		WLen = udpSess.writeToServer(payload[:payload_len])
+		if WLen == -1 {
 			break
-		} else if wlen < payloadLen+rlen {
-			payloadLen = payloadLen - wlen
-			httpUDP_data = rData[wlen:payloadLen]
+		} else if WLen < payload_len {
+			payload_len = copy(payload, payload[WLen:payload_len])
 		} else {
-			payloadLen = 0
+			payload_len = 0
 		}
 	}
 	udpSess.udpSConn.Close()
@@ -162,7 +155,7 @@ func (udpSess *UdpSession) initUdp(httpUDP_data []byte) bool {
 func handleUdpSession(cConn *net.TCPConn, httpUDP_data []byte) {
 	udpSess := new(UdpSession)
 	udpSess.cConn = cConn
-	if !udpSess.initUdp(httpUDP_data) {
+	if udpSess.initUdp(httpUDP_data) == false {
 		cConn.Close()
 		log.Println("Is not httpUDP protocol or Decrypt failed")
 		return

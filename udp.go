@@ -1,4 +1,4 @@
-// udp.go
+1// udp.go
 package main
 
 import (
@@ -69,11 +69,12 @@ func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
 		httpUDP_protocol_head_len int
 		pkgLen                    uint16
 	)
-	for pkgSub = 0; pkgSub+2 < len(httpUDP_data); pkgSub += 2 + int(pkgLen) {
+	var dataLen = len(httpUDP_data)
+	for pkgSub = 0; pkgSub+2 < dataLen; pkgSub += 2 + int(pkgLen) {
 		// 2字节储存包的长度，包括socks5头
 		pkgLen = uint16(httpUDP_data[pkgSub]) | (uint16(httpUDP_data[pkgSub+1]) << 8)
-		// log.Println("pkgSub: ", pkgSub, ", pkgLen: ", pkgLen, "  ", uint16(len(httpUDP_data)))
-		if pkgSub+2+int(pkgLen) > len(httpUDP_data) || pkgLen <= 10 {
+		// log.Println("pkgSub: ", pkgSub, ", pkgLen: ", pkgLen, "  ", uint16(dataLen))
+		if pkgSub+2+int(pkgLen) > dataLen || pkgLen <= 10 {
 			return 0
 		}
 		if bytes.HasPrefix(httpUDP_data[pkgSub+3:pkgSub+5], []byte{0, 0}) == false {
@@ -115,25 +116,25 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 	// 	payloadLen = len(httpUDP_data) - wlen
 	// }
 	for {
-		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
+		// udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
+		// udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		// rlen, err := udpSess.cConn.Read(payload[payloadLen:])
-		data := readLine(udpSess.cConn)
+		rData := readLine(udpSess.cConn)
 		// if err != nil || rlen <= 0 {
 		// 	break
 		// }
-		if data == nil {
+		if rData == nil {
 			break
 		}
-		// rlen := len(data)
+		// rlen := len(rData)
 		if CuteBi_XorCrypt_password != nil {
 			// udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[payloadLen:payloadLen+rlen], udpSess.c2s_CuteBi_XorCrypt_passwordSub)
-			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
+			udpSess.c2s_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(rData, udpSess.c2s_CuteBi_XorCrypt_passwordSub)
 		}
 		// payloadLen += rlen
 		//log.Println("Read Client: ", payloadLen)
 		// wlen = udpSess.writeToServer(payload[:payloadLen])
-		payload := append(httpUDP_data, data...)
+		payload := append(httpUDP_data[wlen:], rData...)
 		wlen = udpSess.writeToServer(payload)
 		if wlen < 0 {
 			break

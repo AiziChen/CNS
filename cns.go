@@ -50,11 +50,14 @@ func rspHeader(header []byte) []byte {
 }
 
 func handleConn(cConn *net.TCPConn) {
-	data := readLine(cConn)
-	if data == nil {
+	// data := readLine(cConn)
+	var data = make([]byte, 65536)
+	len, err := cConn.Read(data)
+	if err != nil {
 		cConn.Close()
 		return
 	}
+	data = data[:len]
 	if !isHttpHeader(data) {
 		handleUdpSession(cConn, data)
 	} else {

@@ -110,13 +110,6 @@ func initConfig() {
 	} else {
 		udp_timeout = time.Duration(udpTimeout)
 	}
-	tcpKeepAlive, err := strconv.ParseInt(configMap["tcpKeepAlive"], 10, 64)
-	if err != nil {
-		fmt.Printf("tcpKeepAlive参数指定错误：%v，将使用默认值60", configMap["tcpKeepAlive"])
-		tcp_keepAlive = 60
-	} else {
-		tcp_keepAlive = time.Duration(tcpKeepAlive)
-	}
 	pidPath = configMap["pidPath"]
 	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {
 		enable_dns_tcpOverUdp = true

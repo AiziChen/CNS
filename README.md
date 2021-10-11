@@ -53,7 +53,7 @@ go build -o cns
 若 go 版本等于或高于 1.11，请使用命令：
 
 ```
-go init cns/m
+go mod init cns/m
 go mod tidy
 go build -o cns
 ```

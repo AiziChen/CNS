@@ -54,7 +54,7 @@ go build -o cns
 1. 非 root 用户：
 
 ```
-sudo cns
+sudo ./cns
 ```
 
 2. root 用户

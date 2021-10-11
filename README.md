@@ -30,7 +30,6 @@
     udpFlag                     udp请求标识, 如: 'httpUDP'
     listenAddr                  监听端口, 如: ':80'，多个端口如：':80,:443,:520'
     udpTimeout                  udp超时时间, 默认: 30s
-    tcpKeepAlive                tcp生存时间, 默认: 60s
     enableHttpDNS               httpDNS开关, #t则开，#f则关
     enableTFO                   tcpFastOpen开关, #t则开，#f则关
     可选参数:
@@ -45,7 +44,17 @@
 
 ##### 编译
 
+若 go 版本低于 1.11，请使用命令：
+
 ```
+go build -o cns
+```
+
+若 go 版本等于或高于 1.11，请使用命令：
+
+```
+go init cns/m
+go mod tidy
 go build -o cns
 ```
 

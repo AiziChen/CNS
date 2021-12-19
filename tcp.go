@@ -30,7 +30,7 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 }
 
 func getProxyHost(header []byte) string {
-	re := regexp.MustCompile("Meng" + ":\\s*(.*)\r")
+	re := regexp.MustCompile(proxyKey + ":\\s*(.*)\r")
 	found := re.FindSubmatch(header)
 	if len(found) < 2 {
 		return ""

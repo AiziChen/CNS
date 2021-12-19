@@ -1,4 +1,5 @@
 //go:build windows
+// +build windows
 
 // isWin.go
 package main

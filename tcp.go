@@ -10,8 +10,9 @@ import (
 
 func tcpForward(fromConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
+	var data = make([]byte, 65536)
 	for {
-		data := readLine(fromConn)
+		fromConn.Read(data)
 		if data == nil {
 			break
 		}

@@ -58,20 +58,23 @@ func handleConn(cConn *net.TCPConn) {
 		return
 	}
 	data = data[:len]
-	if !isHttpHeader(data) {
-		handleUdpSession(cConn, data)
-	} else {
-		if !enable_httpDNS || !RespondHttpdns(cConn, data) { /*优先处理httpDNS请求*/
+	if isHttpHeader(data) {
+		// handle http requests
+		if !enable_httpDNS || !RespondHttpdns(cConn, data) { /*先处理httpDNS请求*/
 			if WLen, err := cConn.Write(rspHeader(data)); err != nil || WLen <= 0 {
 				cConn.Close()
 				return
 			}
 			if bytes.Contains(data, []byte(udpFlag)) {
-				handleConn(cConn) //httpUDP需要读取到二进制数据才进行处理
+				// 丢弃含有udpFlag标识的请求
+				handleConn(cConn)
 			} else {
 				handleTcpSession(cConn, data)
 			}
 		}
+	} else {
+		// handle udp requests
+		handleUdpSession(cConn, data)
 	}
 }
 

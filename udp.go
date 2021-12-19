@@ -28,8 +28,10 @@ func (udpSess *UdpSession) udpServerToClient() {
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
 		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) == true {
 			/* ipv4 */
-			ignore_head_len = 12                 //数组前面的12字节不需要
-			payload[12] = byte(payload_len + 10) //从第13个字节开始设置协议头
+			// 忽略数组前面的12个字节
+			ignore_head_len = 12
+			// 从第13个字节开始设置协议头
+			payload[12] = byte(payload_len + 10)
 			payload[13] = byte((payload_len + 10) >> 8)
 			copy(payload[14:18], []byte{0, 0, 0, 1})
 			copy(payload[18:22], []byte(RAddr.IP)[12:16])

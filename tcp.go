@@ -13,13 +13,15 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	var data = make([]byte, 65536)
 	for {
 		len, err := fromConn.Read(data)
-		if err != nil || data == nil {
+		if err != nil {
+			log.Println("tcp-forward read failed.")
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {
 			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data[:len], CuteBi_XorCrypt_passwordSub)
 		}
 		if _, err := toConn.Write(data[:len]); err != nil {
+			log.Println("tcp-forward write failed.")
 			break
 		}
 	}

@@ -14,29 +14,19 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 	log.Println("Start dns_tcpOverUdp")
 	defer cConn.Close()
 
-	var payloadLen, CuteBi_XorCrypt_passwordSub int
-	var pkgLen uint16
-	for {
-		//cConn.SetReadDeadline(time.Now().Add(tcp_timeout))
-		RLen, err := cConn.Read(buffer[payloadLen:])
-		if RLen <= 0 || err != nil {
+	//cConn.SetReadDeadline(time.Now().Add(tcp_timeout))
+	RLen, err := cConn.Read(buffer)
+	if RLen <= 0 || err != nil {
+		return
+	}
+	if CuteBi_XorCrypt_password != nil {
+		CuteBi_XorCrypt(buffer[:RLen], 0)
+	}
+	if RLen > 2 {
+		pkgLen := (uint16(buffer[0]) << 8) | (uint16(buffer[1])) //包长度转换
+		//防止访问非法数据
+		if int(pkgLen)+2 > len(buffer) {
 			return
-		}
-		//解密
-		if CuteBi_XorCrypt_password != nil {
-			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(buffer[payloadLen:payloadLen+RLen], CuteBi_XorCrypt_passwordSub)
-		}
-		payloadLen += RLen
-		if payloadLen > 2 {
-			pkgLen = (uint16(buffer[0]) << 8) | (uint16(buffer[1])) //包长度转换
-			//防止访问非法数据
-			if int(pkgLen)+2 > len(buffer) {
-				return
-			}
-			//如果读取到了一个完整的包，就跳出循环
-			if int(pkgLen)+2 <= payloadLen {
-				break
-			}
 		}
 	}
 	/* 连接目标地址 */
@@ -47,12 +37,12 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 		return
 	}
 	defer sConn.Close()
-	if WLen, err := sConn.Write(buffer[2:payloadLen]); WLen <= 0 || err != nil {
+	if WLen, err := sConn.Write(buffer[2:RLen]); WLen <= 0 || err != nil {
 		return
 	}
 	sConn.SetReadDeadline(time.Now().Add(udp_timeout))
 
-	RLen, err := sConn.Read(buffer[2:])
+	RLen, err = sConn.Read(buffer[2:])
 	if RLen <= 0 || err != nil {
 		return
 	}

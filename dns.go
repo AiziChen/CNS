@@ -39,7 +39,7 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 		return
 	}
 	defer sConn.Close()
-	if WLen, err := sConn.Write(buffer[2:payloadLen]); WLen <= 0 || err != nil {
+	if WLen, err := sConn.Write(buffer[2:RLen]); WLen <= 0 || err != nil {
 		return
 	}
 	sConn.SetReadDeadline(time.Now().Add(udp_timeout))

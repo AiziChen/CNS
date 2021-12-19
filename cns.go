@@ -16,7 +16,7 @@ import (
 
 var (
 	udpFlag                                           string
-	proxyKey                                          []byte
+	proxyKey                                          string
 	udp_timeout, tcp_keepAlive                        time.Duration
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
 	listenAddrs                                       []string
@@ -92,7 +92,7 @@ func pidSaveToFile(pidPath string) {
 }
 
 func initConfig() {
-	var proxyKeyString, CuteBi_XorCrypt_passwordStr, pidPath string
+	var CuteBi_XorCrypt_passwordStr, pidPath string
 	var isHelp, enable_daemon bool
 	var configFile string
 
@@ -102,7 +102,7 @@ func initConfig() {
 	flag.Parse()
 
 	configMap := InitConfig(configFile)
-	proxyKeyString = configMap["proxyKey"]
+	proxyKey = configMap["proxyKey"]
 	udpFlag = configMap["udpFlag"]
 	listenAddrs = toAddrs(configMap["listenAddr"])
 	CuteBi_XorCrypt_passwordStr = configMap["password"]
@@ -139,7 +139,6 @@ func initConfig() {
 		exec.Command(os.Args[0], []string(append(os.Args[1:], "-daemon=false"))...).Start()
 		os.Exit(0)
 	}
-	proxyKey = []byte("\n" + proxyKeyString + ": ")
 	if CuteBi_XorCrypt_passwordStr == "" {
 		CuteBi_XorCrypt_password = nil
 	} else {

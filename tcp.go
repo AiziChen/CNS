@@ -2,9 +2,9 @@
 package main
 
 import (
-	"bytes"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 )
 
@@ -30,25 +30,21 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 }
 
 func getProxyHost(header []byte) string {
-	var hostSub int = bytes.Index(header, proxyKey)
-	if hostSub < 0 {
+	re := regexp.MustCompile("Meng" + ":\\s*(.*)\r")
+	found := re.FindSubmatch(header)
+	if len(found) < 2 {
 		return ""
 	}
-	hostSub += len(proxyKey)
-	hostEndSub := bytes.IndexByte(header[hostSub:], '\r')
-	if hostEndSub < 0 {
-		return ""
-	}
-	hostEndSub += hostSub
+
 	if CuteBi_XorCrypt_password != nil {
-		host, err := CuteBi_decrypt_host(header[hostSub:hostEndSub])
+		host, err := CuteBi_decrypt_host(found[1])
 		if err != nil {
 			log.Println(err)
 			return ""
 		}
 		return string(host)
 	} else {
-		return string(header[hostSub:hostEndSub])
+		return string(found[1])
 	}
 }
 

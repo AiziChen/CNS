@@ -4,6 +4,5 @@ cns.pid
 test
 cns
 CNS
-cns.exe
-CNS.exe
+*.exe
 go.mod

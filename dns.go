@@ -16,7 +16,7 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 
 	//cConn.SetReadDeadline(time.Now().Add(tcp_timeout))
 	RLen, err := cConn.Read(buffer)
-	if RLen <= 0 || err != nil {
+	if err != nil {
 		return
 	}
 	if CuteBi_XorCrypt_password != nil {

@@ -13,7 +13,7 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	var data = make([]byte, 65536)
 	for {
 		len, err := fromConn.Read(data)
-		if err != nil && data == nil {
+		if err != nil || data == nil {
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {

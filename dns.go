@@ -22,13 +22,7 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 	if CuteBi_XorCrypt_password != nil {
 		CuteBi_XorCrypt(buffer[:RLen], 0)
 	}
-	if RLen > 2 {
-		pkgLen := (uint16(buffer[0]) << 8) | (uint16(buffer[1])) //包长度转换
-		//防止访问非法数据
-		if int(pkgLen)+2 > len(buffer) {
-			return
-		}
-	}
+
 	/* 连接目标地址 */
 	sConn, dialErr := net.Dial("udp", host)
 	if dialErr != nil {

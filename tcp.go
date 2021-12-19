@@ -57,13 +57,13 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 		return
 	}
 	log.Println("proxyHost: " + host)
-	//tcpDNS over udpDNS
+	// tcpDNS over udpDNS
 	if enable_dns_tcpOverUdp && strings.HasSuffix(host, ":53") {
 		dns_tcpOverUdp(cConn, host, header)
 		return
 	}
 
-	/* 连接目标地址 */
+	/* connecting to the destination host */
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}

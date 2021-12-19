@@ -12,14 +12,14 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
 	var data = make([]byte, 65536)
 	for {
-		fromConn.Read(data)
-		if data == nil {
+		len, err := fromConn.Read(data)
+		if err != nil && data == nil {
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {
-			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data, CuteBi_XorCrypt_passwordSub)
+			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data[:len], CuteBi_XorCrypt_passwordSub)
 		}
-		if _, err := toConn.Write(data); err != nil {
+		if _, err := toConn.Write(data[:len]); err != nil {
 			break
 		}
 	}

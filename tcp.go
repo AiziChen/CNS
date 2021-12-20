@@ -83,7 +83,6 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 		return
 	}
 	sConn.SetKeepAlive(true)
-	sConn.SetKeepAlivePeriod(tcp_keepAlive)
 	/* start forward */
 	log.Println("Start tcpForward")
 	go tcpForward(cConn, sConn)

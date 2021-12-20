@@ -17,7 +17,7 @@ import (
 var (
 	udpFlag                                           string
 	proxyKey                                          string
-	udp_timeout, tcp_keepAlive                        time.Duration
+	udp_timeout                                       time.Duration
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
 	listenAddrs                                       []string
 )
@@ -145,7 +145,6 @@ func initConfig() {
 		CuteBi_XorCrypt_password = []byte(CuteBi_XorCrypt_passwordStr)
 	}
 	udp_timeout *= time.Second
-	tcp_keepAlive *= time.Second
 
 	if pidPath != "" {
 		pidSaveToFile(pidPath)
@@ -159,7 +158,6 @@ func handling(listener *net.TCPListener) {
 		conn, err := listener.AcceptTCP()
 		if err == nil {
 			conn.SetKeepAlive(true)
-			conn.SetKeepAlivePeriod(tcp_keepAlive)
 			go handleConn(conn)
 		} else {
 			log.Println(err)

@@ -10,14 +10,12 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"time"
 )
 
 var (
 	udpFlag                                           string
 	proxyKey                                          string
-	udp_timeout                                       time.Duration
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
 	listenAddrs                                       []string
 )
@@ -106,13 +104,6 @@ func initConfig() {
 	udpFlag = configMap["udpFlag"]
 	listenAddrs = toAddrs(configMap["listenAddr"])
 	CuteBi_XorCrypt_passwordStr = configMap["password"]
-	udpTimeout, err := strconv.ParseInt(configMap["udpTimeout"], 10, 64)
-	if err != nil {
-		fmt.Printf("udpTimeout参数指定错误：%v，将使用默认值30", configMap["udpTimeout"])
-		udp_timeout = 30
-	} else {
-		udp_timeout = time.Duration(udpTimeout)
-	}
 	pidPath = configMap["pidPath"]
 	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {
 		enable_dns_tcpOverUdp = true
@@ -144,7 +135,6 @@ func initConfig() {
 	} else {
 		CuteBi_XorCrypt_password = []byte(CuteBi_XorCrypt_passwordStr)
 	}
-	udp_timeout *= time.Second
 
 	if pidPath != "" {
 		pidSaveToFile(pidPath)

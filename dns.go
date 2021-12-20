@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 )
 
 func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
@@ -34,7 +33,6 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 	if WLen, err := sConn.Write(buffer[2:RLen]); WLen <= 0 || err != nil {
 		return
 	}
-	sConn.SetReadDeadline(time.Now().Add(udp_timeout))
 
 	RLen, err = sConn.Read(buffer[2:])
 	if RLen <= 0 || err != nil {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 )
 
 type UdpSession struct {
@@ -19,8 +18,6 @@ func (udpSess *UdpSession) udpServerToClient() {
 	var ignore_head_len int = 0
 	payload := make([]byte, 65536)
 	for {
-		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
 		if err != nil || payload_len <= 0 {
 			break
@@ -48,7 +45,6 @@ func (udpSess *UdpSession) udpServerToClient() {
 		if CuteBi_XorCrypt_password != nil {
 			udpSess.s2c_CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[ignore_head_len:24+payload_len], udpSess.s2c_CuteBi_XorCrypt_passwordSub)
 		}
-		udpSess.cConn.SetWriteDeadline(time.Now().Add(udp_timeout))
 		if WLen, err := udpSess.cConn.Write(payload[ignore_head_len : 24+payload_len]); err != nil || WLen <= 0 {
 			break
 		}
@@ -110,8 +106,6 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 		payload_len = copy(payload, httpUDP_data[WLen:])
 	}
 	for {
-		udpSess.cConn.SetReadDeadline(time.Now().Add(udp_timeout))
-		udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
 		RLen, err = udpSess.cConn.Read(payload[payload_len:])
 		if err != nil || RLen <= 0 {
 			break

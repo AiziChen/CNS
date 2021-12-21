@@ -20,21 +20,18 @@ var (
 	listenAddrs                                       []string
 )
 
+var HEADERS []string = []string{
+	"GET", "POST", "HEAD", "PUT", "COPY", "DELETE", "MOVE", "OPTOINS", "LINK", "UNLINK", "TRACE",
+	"PATCH", "WRAPPED",
+}
+
 func isHttpHeader(header []byte) bool {
-	return bytes.HasPrefix(header, []byte("CONNECT")) ||
-		bytes.HasPrefix(header, []byte("GET")) ||
-		bytes.HasPrefix(header, []byte("POST")) ||
-		bytes.HasPrefix(header, []byte("HEAD")) ||
-		bytes.HasPrefix(header, []byte("PUT")) ||
-		bytes.HasPrefix(header, []byte("COPY")) ||
-		bytes.HasPrefix(header, []byte("DELETE")) ||
-		bytes.HasPrefix(header, []byte("MOVE")) ||
-		bytes.HasPrefix(header, []byte("OPTIONS")) ||
-		bytes.HasPrefix(header, []byte("LINK")) ||
-		bytes.HasPrefix(header, []byte("UNLINK")) ||
-		bytes.HasPrefix(header, []byte("TRACE")) ||
-		bytes.HasPrefix(header, []byte("PATCH")) ||
-		bytes.HasPrefix(header, []byte("WRAPPED"))
+	for i := 0; i < len(HEADERS); i++ {
+		if bytes.HasPrefix(header, []byte(HEADERS[i])) {
+			return true
+		}
+	}
+	return false
 }
 
 func rspHeader(header []byte) []byte {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 type UdpSession struct {
@@ -17,6 +18,8 @@ type UdpSession struct {
 func (udpSess *UdpSession) udpServerToClient() {
 	var ignore_head_len int = 0
 	payload := make([]byte, 65536)
+	udpSess.cConn.SetDeadline(time.Now().Add(udp_timeout))
+	udpSess.udpSConn.SetDeadline(time.Now().Add(udp_timeout))
 	for {
 		payload_len, RAddr, err := udpSess.udpSConn.ReadFromUDP(payload[24:] /*24为httpUDP协议头保留使用*/)
 		if err != nil || payload_len <= 0 {
@@ -105,6 +108,8 @@ func (udpSess *UdpSession) udpClientToServer(httpUDP_data []byte) {
 	if WLen < len(httpUDP_data) {
 		payload_len = copy(payload, httpUDP_data[WLen:])
 	}
+	udpSess.cConn.SetDeadline(time.Now().Add(udp_timeout))
+	udpSess.udpSConn.SetReadDeadline(time.Now().Add(udp_timeout))
 	for {
 		RLen, err = udpSess.cConn.Read(payload[payload_len:])
 		if err != nil || RLen <= 0 {

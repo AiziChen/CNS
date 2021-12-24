@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -18,6 +19,8 @@ var (
 	proxyKey                                          string
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
 	listenAddrs                                       []string
+	udp_timeout                                       time.Duration
+	tcp_timeout                                       time.Duration
 )
 
 var HEADERS []string = []string{
@@ -101,6 +104,26 @@ func initConfig() {
 	udpFlag = configMap["udpFlag"]
 	listenAddrs = toAddrs(configMap["listenAddr"])
 	CuteBi_XorCrypt_passwordStr = configMap["password"]
+	/* udp timeout */
+	udpTimeout, err := strconv.ParseInt(configMap["udpTimeout"], 10, 64)
+	if err != nil {
+		fmt.Printf("udpTimeout参数指定错误：%v，将使用默认值30", configMap["udpTimeout"])
+		udp_timeout = 30
+	} else {
+		udp_timeout = time.Duration(udpTimeout)
+	}
+	udp_timeout *= time.Second
+
+	/* tcp timeout */
+	tcpTimeout, err := strconv.ParseInt(configMap["tcpTimeout"], 10, 64)
+	if err != nil {
+		fmt.Printf("tcpTimeout参数指定错误：%v，将使用默认值30", configMap["tcpTimeout"])
+		tcp_timeout = 30
+	} else {
+		tcp_timeout = time.Duration(tcpTimeout)
+	}
+	tcp_timeout *= time.Second
+
 	pidPath = configMap["pidPath"]
 	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {
 		enable_dns_tcpOverUdp = true
@@ -157,6 +180,7 @@ func handling(listener *net.TCPListener) {
 func initListener(listenAddr string) *net.TCPListener {
 	addr, _ := net.ResolveTCPAddr("tcp", listenAddr)
 	listener, err := net.ListenTCP("tcp", addr)
+	listener.SetDeadline(time.Now().Add(tcp_timeout))
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)

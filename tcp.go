@@ -6,7 +6,6 @@ import (
 	"net"
 	"regexp"
 	"strings"
-	"time"
 )
 
 func tcpForward(fromConn, toConn *net.TCPConn) {
@@ -84,7 +83,7 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 		return
 	}
 	sConn.SetKeepAlive(true)
-	sConn.SetDeadline(time.Now().Add(tcp_timeout))
+	cConn.SetKeepAlive(true)
 	/* start forward */
 	log.Println("Start tcpForward")
 	go tcpForward(cConn, sConn)

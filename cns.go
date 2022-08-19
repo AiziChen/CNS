@@ -22,14 +22,14 @@ var (
 	udp_timeout                                       time.Duration
 )
 
-var HEADERS []string = []string{
-	"GET", "POST", "HEAD", "PUT", "COPY", "DELETE", "MOVE", "OPTOINS", "LINK", "UNLINK", "TRACE",
-	"PATCH", "WRAPPED",
+var METHODS [][]byte = [][]byte{
+	[]byte("GET"), []byte("POST"), []byte("HEAD"), []byte("PUT"), []byte("COPY"), []byte("DELETE"), []byte("MOVE"), []byte("OPTOINS"), []byte("LINK"), []byte("UNLINK"), []byte("TRACE"),
+	[]byte("PATCH"), []byte("WRAPPED"),
 }
 
 func isHttpHeader(header []byte) bool {
-	for i := 0; i < len(HEADERS); i++ {
-		if bytes.HasPrefix(header, []byte(HEADERS[i])) {
+	for i := 0; i < len(METHODS); i++ {
+		if bytes.HasPrefix(header, METHODS[i]) {
 			return true
 		}
 	}
@@ -113,21 +113,14 @@ func initConfig() {
 	udp_timeout *= time.Second
 
 	pidPath = configMap["pidPath"]
-	if rs := configMap["enableDnsTcpOverUdp"]; rs == "#t" {
+	if configMap["enableDnsTcpOverUdp"] == "#t" {
 		enable_dns_tcpOverUdp = true
 	} else {
 		enable_dns_tcpOverUdp = false
 	}
-	if configMap["enableHttpDNS"] == "#t" {
-		enable_httpDNS = true
-	} else {
-		enable_httpDNS = false
-	}
-	if configMap["enableTFO"] == "#t" {
-		enable_TFO = true
-	} else {
-		enable_TFO = false
-	}
+	enable_httpDNS = configMap["enableHttpDNS"] == "#t"
+
+	enable_TFO = configMap["enableTFO"] == "#t"
 
 	if isHelp {
 		fmt.Println("CuteBi Network Server v0.2.1")
@@ -138,6 +131,7 @@ func initConfig() {
 		exec.Command(os.Args[0], []string(append(os.Args[1:], "-daemon=false"))...).Start()
 		os.Exit(0)
 	}
+
 	if CuteBi_XorCrypt_passwordStr == "" {
 		CuteBi_XorCrypt_password = nil
 	} else {

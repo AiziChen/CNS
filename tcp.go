@@ -29,9 +29,10 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	fromConn.Close()
 }
 
+var HOST_RE = regexp.MustCompile(proxyKey + ":\\s*(.*)\r")
+
 func getProxyHost(header []byte) string {
-	re := regexp.MustCompile(proxyKey + ":\\s*(.*)\r")
-	found := re.FindSubmatch(header)
+	found := HOST_RE.FindSubmatch(header)
 	if len(found) < 2 {
 		return ""
 	}
@@ -84,7 +85,7 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 	}
 	sConn.SetKeepAlive(true)
 	cConn.SetKeepAlive(true)
-	/* start forward */
+	/* starting forward */
 	log.Println("Start tcpForward")
 	go tcpForward(cConn, sConn)
 	tcpForward(sConn, cConn)

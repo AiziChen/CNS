@@ -4,23 +4,22 @@ package main
 import (
 	"log"
 	"net"
-	"regexp"
 	"strings"
 )
 
 func tcpForward(fromConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
-	var data = make([]byte, 65536)
+	payload := make([]byte, 65536)
 	for {
-		len, err := fromConn.Read(data)
+		len, err := fromConn.Read(payload)
 		if err != nil {
 			log.Println("tcp-forward read failed.")
 			break
 		}
 		if CuteBi_XorCrypt_password != nil {
-			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(data[:len], CuteBi_XorCrypt_passwordSub)
+			CuteBi_XorCrypt_passwordSub = CuteBi_XorCrypt(payload[:len], CuteBi_XorCrypt_passwordSub)
 		}
-		if _, err := toConn.Write(data[:len]); err != nil {
+		if _, err := toConn.Write(payload[:len]); err != nil {
 			log.Println("tcp-forward write failed.")
 			break
 		}
@@ -29,10 +28,8 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	fromConn.Close()
 }
 
-var HOST_RE = regexp.MustCompile(proxyKey + ":\\s*(.*)\r")
-
 func getProxyHost(header []byte) string {
-	found := HOST_RE.FindSubmatch(header)
+	found := hostRegex.FindSubmatch(header)
 	if len(found) < 2 {
 		return ""
 	}

@@ -26,7 +26,7 @@ func (udpSess *UdpSession) udpServerToClient() {
 			break
 		}
 		fmt.Println("readUdpServerLen: ", payload_len, "RAddr: ", RAddr.String())
-		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) == true {
+		if bytes.HasPrefix(RAddr.IP, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}) {
 			/* ipv4 */
 			// 忽略数组前面的12个字节
 			ignore_head_len = 12
@@ -70,7 +70,7 @@ func (udpSess *UdpSession) writeToServer(httpUDP_data []byte) int {
 		if pkgSub+2+int(pkgLen) > len(httpUDP_data) || pkgLen <= 10 {
 			return 0
 		}
-		if bytes.HasPrefix(httpUDP_data[pkgSub+3:pkgSub+5], []byte{0, 0}) == false {
+		if !bytes.HasPrefix(httpUDP_data[pkgSub+3:pkgSub+5], []byte{0, 0}) {
 			return 1
 		}
 		if httpUDP_data[5] == 1 {
@@ -156,7 +156,7 @@ func (udpSess *UdpSession) initUdp(httpUDP_data []byte) bool {
 func handleUdpSession(cConn *net.TCPConn, httpUDP_data []byte) {
 	udpSess := new(UdpSession)
 	udpSess.cConn = cConn
-	if udpSess.initUdp(httpUDP_data) == false {
+	if !udpSess.initUdp(httpUDP_data) {
 		cConn.Close()
 		log.Println("Is not httpUDP protocol or Decrypt failed")
 		return

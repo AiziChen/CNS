@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"time"
@@ -16,10 +17,10 @@ import (
 
 var (
 	udpFlag                                           string
-	proxyKey                                          string
 	enable_dns_tcpOverUdp, enable_httpDNS, enable_TFO bool
 	listenAddrs                                       []string
 	udp_timeout                                       time.Duration
+	hostRegex                                         *regexp.Regexp
 )
 
 var METHODS [][]byte = [][]byte{
@@ -98,14 +99,19 @@ func initConfig() {
 	flag.Parse()
 
 	configMap := InitConfig(configFile)
-	proxyKey = configMap["proxyKey"]
+	if proxyKey := configMap["proxyKey"]; proxyKey != "" {
+		hostRegex = regexp.MustCompile(proxyKey + ":\\s*(.*)\r")
+	} else {
+		fmt.Fprintf(os.Stderr, "proxyKey为必填项，请先在配置文件中设置它")
+		return
+	}
 	udpFlag = configMap["udpFlag"]
 	listenAddrs = toAddrs(configMap["listenAddr"])
 	CuteBi_XorCrypt_passwordStr = configMap["password"]
 	/* udp timeout */
 	udpTimeout, err := strconv.ParseInt(configMap["udpTimeout"], 10, 64)
 	if err != nil {
-		fmt.Printf("udpTimeout参数指定错误：%v，将使用默认值30", configMap["udpTimeout"])
+		fmt.Printf("udpTimeout参数错误：%v，将使用默认值30", configMap["udpTimeout"])
 		udp_timeout = 30
 	} else {
 		udp_timeout = time.Duration(udpTimeout)

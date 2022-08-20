@@ -2,27 +2,29 @@
 package main
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 )
 
-func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
+var dnsDomainRegexp = regexp.MustCompile(`\?dn=(.*)`)
+
+func dns_tcpOverUdp(cConn *net.TCPConn, host string, buf []byte) {
 	log.Println("Start dns_tcpOverUdp")
 	defer cConn.Close()
 
-	//cConn.SetReadDeadline(time.Now().Add(tcp_timeout))
-	RLen, err := cConn.Read(buffer)
+	RLen, err := cConn.Read(buf)
 	if err != nil {
 		return
 	}
 	if CuteBi_XorCrypt_password != nil {
-		CuteBi_XorCrypt(buffer[:RLen], 0)
+		CuteBi_XorCrypt(buf[:RLen], 0)
 	}
 
-	/* 连接目标地址 */
+	/* Connectting to the destination address */
 	sConn, dialErr := net.Dial("udp", host)
 	if dialErr != nil {
 		log.Println(dialErr)
@@ -30,35 +32,32 @@ func dns_tcpOverUdp(cConn *net.TCPConn, host string, buffer []byte) {
 		return
 	}
 	defer sConn.Close()
-	if WLen, err := sConn.Write(buffer[2:RLen]); WLen <= 0 || err != nil {
+	if WLen, err := sConn.Write(buf[2:RLen]); WLen <= 0 || err != nil {
 		return
 	}
 
-	RLen, err = sConn.Read(buffer[2:])
+	RLen, err = sConn.Read(buf[2:])
 	if RLen <= 0 || err != nil {
 		return
 	}
-	//包长度转换
-	buffer[0] = byte(RLen >> 8)
-	buffer[1] = byte(RLen)
-	//加密
+	buf[0] = byte(RLen >> 8)
+	buf[1] = byte(RLen)
 	if CuteBi_XorCrypt_password != nil {
-		CuteBi_XorCrypt(buffer[:2+RLen], 0)
+		CuteBi_XorCrypt(buf[:2+RLen], 0)
 	}
-	cConn.Write(buffer[:2+RLen])
+	cConn.Write(buf[:2+RLen])
 }
 
-func RespondHttpdns(cConn *net.TCPConn, header []byte) bool {
-	var domain string
-	httpdnsDomainsub := bytes.Index(header[:], []byte("?dn="))
-	if httpdnsDomainsub < 0 {
-		return false
+func GetHttpdnsDomain(header []byte) (string, error) {
+	domain := dnsDomainRegexp.FindSubmatch(header)
+	if len(domain) < 2 {
+		return "", errors.New("get http DNS domain error")
+	} else {
+		return string(domain[1]), nil
 	}
-	if _, err := fmt.Sscanf(string(header[httpdnsDomainsub+4:]), "%s", &domain); err != nil {
-		log.Println(err)
-		return false
-	}
+}
 
+func RespondHttpdns(cConn *net.TCPConn, domain string) {
 	log.Println("httpDNS domain: [" + domain + "]")
 	ips, err := net.LookupHost(domain)
 	if err != nil {
@@ -74,5 +73,4 @@ func RespondHttpdns(cConn *net.TCPConn, header []byte) bool {
 		log.Println("httpDNS domain: ["+domain+"], IPS: ", ips)
 	}
 	cConn.Close()
-	return true
 }

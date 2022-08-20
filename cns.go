@@ -48,30 +48,36 @@ func rspHeader(header []byte) []byte {
 }
 
 func handleConn(cConn *net.TCPConn) {
-	var data = make([]byte, 65536)
-	len, err := cConn.Read(data)
+	var payload = make([]byte, 65536)
+	len, err := cConn.Read(payload)
 	if err != nil {
 		cConn.Close()
 		return
 	}
-	data = data[:len]
-	if isHttpHeader(data) {
-		// handle http requests
-		if !enable_httpDNS || !RespondHttpdns(cConn, data) { /*先处理httpDNS请求*/
-			if WLen, err := cConn.Write(rspHeader(data)); err != nil || WLen <= 0 {
-				cConn.Close()
+	payload = payload[:len]
+	if isHttpHeader(payload) {
+		/* handle http requests */
+		// process httpDNS request first
+		if enable_httpDNS {
+			if domain, err := GetHttpdnsDomain(payload); err == nil {
+				RespondHttpdns(cConn, domain)
 				return
 			}
-			if bytes.Contains(data, []byte(udpFlag)) {
-				// 丢弃含有udpFlag标识的请求
-				handleConn(cConn)
-			} else {
-				handleTcpSession(cConn, data)
-			}
+		}
+		// process TCP & UDP request next
+		if WLen, err := cConn.Write(rspHeader(payload)); err != nil || WLen <= 0 {
+			cConn.Close()
+			return
+		}
+		if bytes.Contains(payload, []byte(udpFlag)) {
+			// 丢弃含有udpFlag标识的请求
+			handleConn(cConn)
+		} else {
+			handleTcpSession(cConn, payload)
 		}
 	} else {
 		// handle udp requests
-		handleUdpSession(cConn, data)
+		handleUdpSession(cConn, payload)
 	}
 }
 

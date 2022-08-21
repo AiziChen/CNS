@@ -64,7 +64,7 @@ func handleConn(cConn *net.TCPConn) {
 				return
 			}
 		}
-		// process TCP & UDP request next
+		// process TCP request next
 		if WLen, err := cConn.Write(rspHeader(payload)); err != nil || WLen <= 0 {
 			cConn.Close()
 			return

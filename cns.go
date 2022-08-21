@@ -135,7 +135,7 @@ func initConfig() {
 	enable_TFO = configMap["enableTFO"] == "#t"
 
 	if isHelp {
-		fmt.Println("CuteBi Network Server v0.2.1")
+		fmt.Println("CuteBi Network Server v0.2.4")
 		flag.Usage()
 		os.Exit(0)
 	}

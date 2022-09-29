@@ -49,7 +49,7 @@
 若 go 版本低于 1.11，请使用命令：
 
 ```
-go build -o cns
+go run build/main.go -a amd64 -p linux
 ```
 
 若 go 版本等于或高于 1.11，请使用命令：
@@ -57,7 +57,13 @@ go build -o cns
 ```
 go mod init cns/m
 go mod tidy
-go build -o cns
+go run build/main.go -a amd64 -p linux
+```
+
+显示编译命令帮助：
+
+```
+go run build/main.go
 ```
 
 #### 使用方法

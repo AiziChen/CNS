@@ -10,9 +10,10 @@ import (
 )
 
 type UdpSession struct {
-	cConn                                                            *net.TCPConn
-	udpSConn                                                         *net.UDPConn
-	c2s_CuteBi_XorCrypt_passwordSub, s2c_CuteBi_XorCrypt_passwordSub int
+	cConn                           *net.TCPConn
+	udpSConn                        *net.UDPConn
+	c2s_CuteBi_XorCrypt_passwordSub int
+	s2c_CuteBi_XorCrypt_passwordSub int
 }
 
 func (udpSess *UdpSession) udpServerToClient() {

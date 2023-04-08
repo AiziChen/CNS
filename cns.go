@@ -29,8 +29,8 @@ var METHODS [][]byte = [][]byte{
 }
 
 func isHttpHeader(header []byte) bool {
-	for i := 0; i < len(METHODS); i++ {
-		if bytes.HasPrefix(header, METHODS[i]) {
+	for _, method := range METHODS {
+		if bytes.HasPrefix(header, method) {
 			return true
 		}
 	}
@@ -87,8 +87,7 @@ func pidSaveToFile(pidPath string) {
 		fmt.Println(err)
 		return
 	}
-	_, err = fp.WriteString(fmt.Sprintf("%d", os.Getpid()))
-	if err != nil {
+	if _, err = fp.WriteString(fmt.Sprintf("%d", os.Getpid())); err != nil {
 		fmt.Println(err)
 	}
 	fp.Close()

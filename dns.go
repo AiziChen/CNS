@@ -14,7 +14,6 @@ var dnsDomainRegexp = regexp.MustCompile(`\?dn=(.*)`)
 
 func dns_tcpOverUdp(cConn *net.TCPConn, host string, buf []byte) {
 	log.Println("Start dns_tcpOverUdp")
-	defer cConn.Close()
 
 	RLen, err := cConn.Read(buf)
 	if err != nil {

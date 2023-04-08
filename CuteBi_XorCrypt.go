@@ -32,7 +32,7 @@ func CuteBi_decrypt_host(host []byte) ([]byte, error) {
 	}
 	CuteBi_XorCrypt(hostDec, 0)
 	if hostDec[n-1] != 0 {
-		return nil, errors.New("Decrypt failed.")
+		return nil, errors.New("host decrypt failed")
 	}
 
 	return hostDec[:n-1], nil

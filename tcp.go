@@ -2,6 +2,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net"
 	"strings"
@@ -28,27 +29,27 @@ func tcpForward(fromConn, toConn *net.TCPConn) {
 	fromConn.Close()
 }
 
-func getProxyHost(header []byte) string {
+func getProxyHost(header []byte) (string, error) {
 	found := hostRegex.FindSubmatch(header)
 	if len(found) < 2 {
-		return ""
+		return "", errors.New("not found host in header")
 	}
 
 	if CuteBi_XorCrypt_password != nil {
 		host, err := CuteBi_decrypt_host(found[1])
 		if err != nil {
 			log.Println(err)
-			return ""
+			return "", err
 		}
-		return string(host)
+		return string(host), nil
 	} else {
-		return string(found[1])
+		return string(found[1]), nil
 	}
 }
 
 func handleTcpSession(cConn *net.TCPConn, header []byte) {
-	host := getProxyHost(header)
-	if host == "" {
+	host, err := getProxyHost(header)
+	if err != nil {
 		log.Println("No proxy host: {" + string(header) + "}")
 		cConn.Write([]byte("No proxy host"))
 		cConn.Close()
@@ -59,6 +60,7 @@ func handleTcpSession(cConn *net.TCPConn, header []byte) {
 	if enable_dns_tcpOverUdp && strings.HasSuffix(host, ":53") {
 		// tcpDNS over udpDNS
 		dns_tcpOverUdp(cConn, host, header)
+		cConn.Close()
 		return
 	}
 

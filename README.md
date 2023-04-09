@@ -56,7 +56,6 @@ go run build/main.go -a amd64 -p linux
 
 ```
 go mod init cns/m
-go mod tidy
 go run build/main.go -a amd64 -p linux
 ```
 
@@ -71,11 +70,13 @@ go run build/main.go
 1. 非 root 用户：
 
 ```
+chmod u+x cns
 sudo ./cns
 ```
 
 2. root 用户
 
 ```
+chmod u+x cns
 ./cns
 ```

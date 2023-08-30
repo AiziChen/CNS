@@ -24,7 +24,7 @@ var (
 )
 
 var METHODS [][]byte = [][]byte{
-	[]byte("GET"), []byte("POST"), []byte("HEAD"), []byte("PUT"), []byte("COPY"), []byte("DELETE"), []byte("MOVE"), []byte("OPTOINS"), []byte("LINK"), []byte("UNLINK"), []byte("TRACE"),
+	[]byte("CONNECT"), []byte("GET"), []byte("POST"), []byte("HEAD"), []byte("PUT"), []byte("COPY"), []byte("DELETE"), []byte("MOVE"), []byte("OPTOINS"), []byte("LINK"), []byte("UNLINK"), []byte("TRACE"),
 	[]byte("PATCH"), []byte("WRAPPED"),
 }
 

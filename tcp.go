@@ -29,6 +29,8 @@ func tcpForward(fromConn *net.TCPConn, toConn *net.TCPConn) {
 	var CuteBi_XorCrypt_passwordSub int = 0
 	var payload = make([]byte, 65536)
 	forwardLoop(fromConn, toConn, payload, CuteBi_XorCrypt_passwordSub)
+	fromConn.Close();
+	toConn.Close();
 }
 
 func getProxyHost(header []byte) (string, error) {
